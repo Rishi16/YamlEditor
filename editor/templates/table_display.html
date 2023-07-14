@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Table Display</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 40px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 4px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .table {
+            margin-bottom: 20px;
+        }
+        th {
+            font-weight: bold;
+        }
+        .editable {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .list-modal {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+        .list-modal .list-group {
+            margin-bottom: 20px;
+        }
+        .list-modal .btn {
+            margin-right: 5px;
+        }
+        .list-modal .form-group {
+            margin-bottom: 10px;
+        }
+        .list-modal .form-group input {
+            width: 100%;
+            padding: 5px;
+            font-size: inherit;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Table Display</h1>
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Type</th>
+                    <th>Name</th>
+                    <th>Target Observable Type</th>
+                    <th>Strong</th>
+                    <th>Weak</th>
+                    <th>Extra Prop</th>
+                    <th>Related Extra Prop</th>
+                    <th>Target Extra Prop</th>
+                    <th>Target Related Extra Prop</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for config in configs %}
+                <tr>
+                    <td class="editable" onclick="editCell(this)">{{ config.product }}</td>
+                    <td class="editable" onclick="editCell(this)">{{ config.type }}</td>
+                    <td class="editable" onclick="editCell(this)">{{ config.name }}</td>
+                    <td class="editable" onclick="editCell(this)">{{ config.target_observable_type }}</td>
+                    <td class="editable" onclick="editCell(this, 'strong')">{{ config.strong }}</td>
+                    <td class="editable" onclick="editCell(this, 'weak')">{{ config.weak }}</td>
+                    <td class="editable" onclick="editCell(this, 'extra_prop')">{{ config.extra_prop }}</td>
+                    <td class="editable" onclick="editCell(this, 'related_extra_prop')">{{ config.related_extra_prop }}</td>
+                    <td class="editable" onclick="editCell(this, 'target_extra_prop')">{{ config.target_extra_prop }}</td>
+                    <td class="editable" onclick="editCell(this, 'target_related_extra_prop')">{{ config.target_related_extra_prop }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- List Modal (Target Extra Prop and Extra Prop) -->
+    <div class="modal fade" id="extraPropModal" tabindex="-1" role="dialog" aria-labelledby="extraPropModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content list-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="extraPropModalLabel">List Items (Extra Prop)</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" id="extraPropGroup">
+                        <div id="extraPropItems">
+                            <!-- Populated dynamically with extra_prop items -->
+                        </div>
+                        <div class="text-right">
+                            <button class="btn btn-primary" onclick="addItem('extraPropItems')">Add</button>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <button class="btn btn-danger" onclick="removeItems('extraPropItems')">Remove</button>
+                        <button class="btn btn-success" onclick="saveItems('extraPropItems')">Done</button>
+                        <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- List Modal (Target Related Extra Prop and Related Extra Prop) -->
+    <div class="modal fade" id="relatedExtraPropModal" tabindex="-1" role="dialog" aria-labelledby="relatedExtraPropModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content list-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="relatedExtraPropModalLabel">List Items (Related Extra Prop)</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" id="relatedExtraPropGroup">
+                        <div id="relatedExtraPropItems">
+                            <!-- Populated dynamically with related_extra_prop items -->
+                        </div>
+                        <div class="text-right">
+                            <button class="btn btn-primary" onclick="addItem('relatedExtraPropItems')">Add</button>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <button class="btn btn-danger" onclick="removeItems('relatedExtraPropItems')">Remove</button>
+                        <button class="btn btn-success" onclick="saveItems('relatedExtraPropItems')">Done</button>
+                        <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let targetField;
+        let extraPropItems = [];
+        let relatedExtraPropItems = [];
+
+        function editCell(cell, field) {
+            targetField = field;
+            const oldValue = cell.innerText;
+            if (field === 'extra_prop') {
+                extraPropItems = oldValue ? oldValue.split('\n') : [];
+                populateList('extraPropItems', extraPropItems);
+                $('#extraPropModal').modal('show');
+            } else if (field === 'related_extra_prop') {
+                relatedExtraPropItems = oldValue ? oldValue.split('\n') : [];
+                populateList('relatedExtraPropItems', relatedExtraPropItems);
+                $('#relatedExtraPropModal').modal('show');
+            }
+        }
+
+        function populateList(containerId, items) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            for (let i = 0; i < items.length; i++) {
+                const listItem = document.createElement('div');
+                listItem.className = 'list-item';
+                listItem.innerHTML = `
+                    <input type="text" class="form-control" value="${items[i]}">
+                    <button class="btn btn-danger btn-sm" onclick="removeItem(this)"><i class="fas fa-minus"></i></button>
+                `;
+                container.appendChild(listItem);
+            }
+        }
+
+        function addItem(containerId) {
+            const container = document.getElementById(containerId);
+            const listItem = document.createElement('div');
+            listItem.className = 'list-item';
+            listItem.innerHTML = `
+                <input type="text" class="form-control" value="">
+                <button class="btn btn-danger btn-sm" onclick="removeItem(this)"><i class="fas fa-minus"></i></button>
+            `;
+            container.appendChild(listItem);
+        }
+
+        function removeItem(button) {
+            const listItem = button.parentNode;
+            listItem.parentNode.removeChild(listItem);
+        }
+
+        function removeItems(containerId) {
+            const container = document.getElementById(containerId);
+            const items = container.getElementsByClassName('list-item');
+            removeListItems(items);
+        }
+
+        function removeListItems(items) {
+            for (let i = items.length - 1; i >= 0; i--) {
+                items[i].parentNode.removeChild(items[i]);
+            }
+        }
+
+        function saveItems(containerId) {
+            const cell = document.querySelector('.editable.active');
+            const container = document.getElementById(containerId);
+            const items = Array.from(container.getElementsByClassName('form-control'));
+            const values = items.map(input => input.value);
+            const newValue = values.join('\n');
+            cell.innerText = newValue;
+            $('#' + containerId.replace('Items', 'Modal')).modal('hide');
+        }
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</body>
+</html>
