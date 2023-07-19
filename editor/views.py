@@ -25,7 +25,7 @@ def validate_config(config_data):
     for item in config_data["config"]:
         if "product" not in item or "type" not in item or "name" not in item:
             raise ValueError(
-                "Mandatory fields (product, type, name) missing for a config item"
+                f"Mandatory fields (product, type, name) missing for a config item: {item}"
             )
 
         if (
@@ -33,7 +33,7 @@ def validate_config(config_data):
             or not isinstance(item["type"], str)
             or not isinstance(item["name"], str)
         ):
-            raise ValueError("Product, type, and name must be of string type")
+            raise ValueError(f"Product, type, and name must be of string type: {item}")
 
         if (
             "strong" not in item
@@ -43,7 +43,7 @@ def validate_config(config_data):
         ):
             raise ValueError(
                 "Mandatory list fields (strong, weak, extra_prop, related_extra_prop) missing "
-                "for a config item"
+                f"for a config item: : {item}"
             )
 
         if (
@@ -53,25 +53,20 @@ def validate_config(config_data):
             or not isinstance(item["related_extra_prop"], list)
         ):
             raise ValueError(
-                "Strong, weak, extra_prop, and related_extra_prop must be lists"
+                f"Strong, weak, extra_prop, and related_extra_prop must be lists: {item}"
             )
 
-        if "target_observable_type" not in item:
+        if item.get("target_observable_type") and not isinstance(item["target_observable_type"], str):
+            raise ValueError(f"target_observable_type must be of string type: {item}")
+
+        if item.get("target_extra_prop") and len(item["extra_prop"]) != len(item["target_extra_prop"]):
             raise ValueError(
-                "Mandatory field target_observable_type missing for a config item"
+                f"Mismatch in length of extra_prop and target_extra_prop lists: {item}"
             )
 
-        if not isinstance(item["target_observable_type"], str):
-            raise ValueError("target_observable_type must be of string type")
-
-        if len(item["extra_prop"]) != len(item["target_extra_prop"]):
+        if item.get("target_related_extra_prop") and len(item["related_extra_prop"]) != len(item["target_related_extra_prop"]):
             raise ValueError(
-                "Mismatch in length of extra_prop and target_extra_prop lists"
-            )
-
-        if len(item["related_extra_prop"]) != len(item["target_related_extra_prop"]):
-            raise ValueError(
-                "Mismatch in length of related_extra_prop and target_related_extra_prop lists"
+                f"Mismatch in length of related_extra_prop and target_related_extra_prop lists: {item}"
             )
 
 
@@ -81,13 +76,13 @@ def save_config(config_data):
             product=item["product"],
             type=item["type"],
             name=item["name"],
-            target_observable_type=item["target_observable_type"],
+            target_observable_type=item.get("target_observable_type", ""),
             strong=item["strong"],
             weak=item["weak"],
             extra_prop=item["extra_prop"],
             related_extra_prop=item["related_extra_prop"],
-            target_extra_prop=item["target_extra_prop"],
-            target_related_extra_prop=item["target_related_extra_prop"],
+            target_extra_prop=item.get("target_extra_prop", []),
+            target_related_extra_prop=item.get("target_related_extra_prop", []),
         )
         config.save()
 
