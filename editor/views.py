@@ -1,7 +1,42 @@
+import json
+
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import Config
 import yaml
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+
+@csrf_exempt
+def update_column(request):
+    if request.method == 'POST':
+        print(request.POST.__dict__)
+        body = json.loads(request.body)
+        record_id = body.get('id')
+        field = body.get('field')
+        new_value = body.get('newValue')
+
+        try:
+            # Retrieve the record from the database
+            print(record_id, field, new_value)
+            record = Config.objects.get(id=record_id)
+
+            # Update the field with the new value
+            setattr(record, field, new_value)
+            record.save()
+            print(Config.objects.get(id=record_id).__dict__)
+            # Return a success response
+            return JsonResponse({'status': 'success'})
+        except Config.DoesNotExist:
+            # Return an error response if the record is not found
+            return JsonResponse({'status': 'error', 'message': 'Record not found'})
+        except Exception as e:
+            # Return an error response for any other exceptions
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    else:
+        # Return an error response if the request method is not POST
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
 
 def upload_file(request):
