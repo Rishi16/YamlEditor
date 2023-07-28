@@ -1,1014 +1,285 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Table Display</title>
-        <link rel="stylesheet"
-            href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-        <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap4.min.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-        <style>
-            body {
-            background-color: #f8f9fa;
-            padding: 0;
-            margin: 0;
-            }
-            .dark-mode-switch {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-            }
-            .dark-mode-switch input[type="checkbox"] {
-            display: none;
-            }
-            .dark-mode-switch label {
-            display: block;
-            cursor: pointer;
-            width: 40px;
-            height: 20px;
-            border-radius: 20px;
-            background-color: #ccc;
-            position: relative;
-            }
-            .dark-mode-switch label:after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background-color: #fff;
-            transition: transform 0.3s ease;
-            }
-            .dark-mode-switch input[type="checkbox"]:checked + label {
-            background-color: #3e3e3e;
-            }
-            .dark-mode-switch input[type="checkbox"]:checked + label:after {
-            transform: translateX(20px);
-            }
-            /* Light mode colors */
-            :root {
-            --bg-color: #f8f9fa;
-            --text-color: #000;
-            --table-bg-color: #fff;
-            --table-text-color: #000;
-            }
-            /* Dark mode colors */
-            body.dark-mode {
-            --bg-color: #1a1a1a;
-            --text-color: #fff;
-            --table-bg-color: #2c2c2c;
-            --table-text-color: #fff;
-            }
-            .container-fluid {
-            background-color: var(--bg-color); /* Use CSS variable for background color */
-            color: var(--text-color); /* Use CSS variable for text color */
-            padding: 40px;
-            border-radius: 4px;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
-            height: 100vh;
-            overflow-x: auto;
-            }
-            /* Additional styles for dark mode */
-            body.dark-mode .container-fluid {
-            background-color: var(--table-bg-color); /* Use CSS variable for dark mode background color */
-            color: var(--table-text-color); /* Use CSS variable for dark mode text color */
-            }
-            h1 {
-            margin-bottom: 20px;
-            font-weight: bold;
-            text-align: center;
-            }
-            .table {
-            margin-bottom: 20px;
-            color: var(--table-text-color);
-            }
-            th {
-            font-weight: bold;
-            }
-            .editable {
-            cursor: pointer;
-            text-decoration: underline;
-            }
-            .list-modal {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            padding: 20px;
-            border-radius: 4px;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
-            max-width: 800px; /* Set the maximum width for the popup box */
-            margin: 0 auto; /* Center the popup box horizontally */
-            }
-            .list-modal .list-group {
-            margin-bottom: 20px;
-            }
-            .list-modal .btn {
-            margin-right: 5px;
-            }
-            .list-modal .form-group {
-            align-items: center;
-            margin-bottom: 10px;
-            }
-            .list-modal .form-group .form-control {
-            flex-grow: 1;
-            margin-right: 5px;
-            }
-            .list-modal .form-group:last-child .btn-danger {
-            margin-top: 0;
-            }
-            .list-modal .form-group input {
-            padding: 5px;
-            font-size: inherit;
-            }
-            .editable {
-            cursor: pointer;
-            /* Remove the underline */
-            text-decoration: none;
-            }
-            .table-container {
-            overflow-x: auto;
-            max-width: 100%;
-            }
-            #twoFieldModal > div {
-            max-width: 800px;
-            }
-            .error-message {
-                color: red;
-                position: absolute;
-                bottom: 5px;
-                left: 20px;
-                font-size: 14px;
-            }
-            #addRecordModal {
-                z-index: 1050;
-            }
-            #listFieldModal {
-                z-index: 1100;
-            }
-            #twoFieldModal {
-                z-index: 1100;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="dark-mode-switch">
-            <input type="checkbox" id="darkModeSwitch">
-            <label for="darkModeSwitch"></label>
-        </div>
-        <div style="position: fixed; bottom: 20px; right: 20px;">
-            <!-- Add New Record Button -->
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addRecordModal">+</button>
-        </div>
 
-        <div class="container-fluid">
-            <h1>Table Display</h1>
-            <table id="dataTable" class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>Type</th>
-                        <th>Target Observable Type</th>
-                        <th>Name</th>
-                        <th>Strong</th>
-                        <th>Weak</th>
-                        <th>Target Extra Prop</th>
-                        <th>Extra Prop</th>
-                        <th>Target Related Extra Prop</th>
-                        <th>Related Extra Prop</th>
-                    </tr>
-                </thead>
-<tbody>
-    {% for config in configs %}
-    <tr id="row-{{ config.id }}">
-        <td class="editable" onclick="editCell(this, 'product', {{ config.id }})" id="row-{{ config.id }}-product">{{ config.product }}</td>
-        <td class="editable" onclick="editCell(this, 'type', {{ config.id }})" id="row-{{ config.id }}-type">{{ config.type }}</td>
-        <td class="editable" onclick="editCell(this, 'target_observable_type', {{ config.id }})" id="row-{{ config.id }}-target_observable_type">{{ config.target_observable_type }}</td>
-        <td class="editable" onclick="editCell(this, 'name', {{ config.id }})" id="row-{{ config.id }}-name">{{ config.name }}</td>
-        <td class="editable" onclick="editCell(this, 'strong', {{ config.id }})" id="row-{{ config.id }}-strong">{{ config.strong }}</td>
-        <td class="editable" onclick="editCell(this, 'weak', {{ config.id }})" id="row-{{ config.id }}-weak">{{ config.weak }}</td>
-        <td class="editable" onclick="editTwoFields(this, {{ config.id }})" data-target-extra-prop="{{ config.target_extra_prop }}" data-extra-prop="{{ config.extra_prop }}" id="row-{{ config.id }}-target_extra_prop">{{ config.target_extra_prop }}</td>
-        <td class="editable" onclick="editTwoFields(this, {{ config.id }})" data-target-extra-prop="{{ config.target_extra_prop }}" data-extra-prop="{{ config.extra_prop }}" id="row-{{ config.id }}-extra_prop">{{ config.extra_prop }}</td>
-        <td class="editable" onclick="editTwoRelatedFields(this, {{ config.id }})" data-target-related-extra-prop="{{ config.target_related_extra_prop }}" data-related-extra-prop="{{ config.related_extra_prop }}" id="row-{{ config.id }}-target_related_extra_prop">{{ config.target_related_extra_prop }}</td>
-        <td class="editable" onclick="editTwoRelatedFields(this, {{ config.id }})" data-target-related-extra-prop="{{ config.target_related_extra_prop }}" data-related-extra-prop="{{ config.related_extra_prop }}" id="row-{{ config.id }}-related_extra_prop">{{ config.related_extra_prop }}</td>
-    </tr>
-    {% endfor %}
-</tbody>
-            </table>
-        </div>
-        <!-- String Field Modal -->
-        <div class="modal fade" id="stringFieldModal" tabindex="-1" role="dialog" aria-labelledby="stringFieldModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content list-modal">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="stringFieldModalLabel">Edit Value</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group" id="stringFieldGroup">
-                            <input type="text" class="form-control" id="stringFieldValue">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-success" onclick="saveStringField()">Done</button>
-                        <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- List Field Modal -->
-        <div class="modal fade" id="listFieldModal" tabindex="-1" role="dialog" aria-labelledby="listFieldModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content list-modal">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="listFieldModalLabel">List Items</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group" id="listFieldGroup">
-                            <div id="listItems">
-                                <!-- Populated dynamically with list items -->
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <div class="error-message" id="listFieldErrorMessage"></div> <!-- Add this line for the error message -->
-                        <button class="btn btn-primary" id="addButton" onclick="addItem('listItems')">Add</button>
-                        <button class="btn btn-success" onclick="saveListField()">Done</button>
-                        <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+<head>
+  <title>Table Display</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'editor/css/table_display.css' %}">
+</head>
 
-<div class="modal fade" id="twoFieldModal" tabindex="-1" role="dialog" aria-labelledby="twoFieldModalLabel" aria-hidden="true">
+<body>
+  <div class="dark-mode-switch">
+    <input type="checkbox" id="darkModeSwitch">
+    <label for="darkModeSwitch"></label>
+  </div>
+  <!-- Add New Record Button Container -->
+  <div id="addNewRecordButton">
+    <button class="btn btn-primary" data-toggle="modal" data-target="#addRecordModal">+</button>
+  </div>
+  <div class="container-fluid">
+    <h1>Table Display</h1>
+    <table id="dataTable" class="table table-striped table-bordered">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Type</th>
+          <th>Target Observable Type</th>
+          <th>Name</th>
+          <th>Strong</th>
+          <th>Weak</th>
+          <th>Target Extra Prop</th>
+          <th>Extra Prop</th>
+          <th>Target Related Extra Prop</th>
+          <th>Related Extra Prop</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for config in configs %}
+        <tr id="row-{{ config.id }}">
+          <td class="editable" onclick="editCell(this, 'product', {{ config.id }})" id="row-{{ config.id }}-product">{{ config.product }}</td>
+          <td class="editable" onclick="editCell(this, 'type', {{ config.id }})" id="row-{{ config.id }}-type">{{ config.type }}</td>
+          <td class="editable" onclick="editCell(this, 'target_observable_type', {{ config.id }})" id="row-{{ config.id }}-target_observable_type">{{ config.target_observable_type }}</td>
+          <td class="editable" onclick="editCell(this, 'name', {{ config.id }})" id="row-{{ config.id }}-name">{{ config.name }}</td>
+          <td class="editable" onclick="editCell(this, 'strong', {{ config.id }})" id="row-{{ config.id }}-strong">{{ config.strong }}</td>
+          <td class="editable" onclick="editCell(this, 'weak', {{ config.id }})" id="row-{{ config.id }}-weak">{{ config.weak }}</td>
+          <td class="editable" onclick="editTwoFields(this, {{ config.id }})" data-target-extra-prop="{{ config.target_extra_prop }}" data-extra-prop="{{ config.extra_prop }}" id="row-{{ config.id }}-target_extra_prop">{{ config.target_extra_prop }}</td>
+          <td class="editable" onclick="editTwoFields(this, {{ config.id }})" data-target-extra-prop="{{ config.target_extra_prop }}" data-extra-prop="{{ config.extra_prop }}" id="row-{{ config.id }}-extra_prop">{{ config.extra_prop }}</td>
+          <td class="editable" onclick="editTwoRelatedFields(this, {{ config.id }})" data-target-related-extra-prop="{{ config.target_related_extra_prop }}" data-related-extra-prop="{{ config.related_extra_prop }}" id="row-{{ config.id }}-target_related_extra_prop">{{ config.target_related_extra_prop }}</td>
+          <td class="editable" onclick="editTwoRelatedFields(this, {{ config.id }})" data-target-related-extra-prop="{{ config.target_related_extra_prop }}" data-related-extra-prop="{{ config.related_extra_prop }}" id="row-{{ config.id }}-related_extra_prop">{{ config.related_extra_prop }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <!-- String Field Modal -->
+  <div class="modal fade" id="stringFieldModal" tabindex="-1" role="dialog" aria-labelledby="stringFieldModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
-        <div class="modal-content list-modal">
-            <div class="modal-header">
-                <h5 class="modal-title" id="targetColumnHeader" style="width: 48%;"></h5>
-                <h5 class="modal-title" id="valueColumnHeader"></h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <!-- Container for inputs -->
-                <div id="twoFieldsContainer">
-                    <div class="form-group">
-                        <input type="text" class="form-control" id="targetColumnInput">
-                    </div>
-                    <div class="form-group">
-                        <input type="text" class="form-control" id="valueColumnInput">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <div class="error-message" id="twoFieldErrorMessage"></div> <!-- Add this line for the error message -->
-                <button class="btn btn-primary" onclick="addTwoFields()">Add</button>
-                <button class="btn btn-success" onclick="saveTwoFields()">Done</button>
-                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            </div>
+      <div class="modal-content list-modal">
+        <div class="modal-header">
+          <h5 class="modal-title" id="stringFieldModalLabel">Edit Value</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
-    </div>
-</div>
-
-
-        <!-- Add New Record Modal -->
-<div class="modal fade" id="addRecordModal" tabindex="-1" role="dialog" aria-labelledby="addRecordModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addRecordModalLabel">Add New Record</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <!-- Container for inputs -->
-        <div id="addRecordContainer">
-          <!-- Product -->
-          <div class="form-group">
-            <label for="productInput">Product</label>
-            <input type="text" class="form-control" id="productInput">
-          </div>
-          <!-- Type -->
-          <div class="form-group">
-            <label for="typeInput">Type</label>
-            <input type="text" class="form-control" id="typeInput">
-          </div>
-          <!-- Target Observable Type -->
-          <div class="form-group">
-            <label for="targetObservableTypeInput">Target Observable Type</label>
-            <input type="text" class="form-control" id="targetObservableTypeInput">
-          </div>
-          <!-- Name -->
-          <div class="form-group">
-            <label for="nameInput">Name</label>
-            <input type="text" class="form-control" id="nameInput">
-          </div>
-          <!-- Strong -->
-          <div class="form-group">
-            <label for="strongInput">Strong</label>
-            <input type="text" class="form-control" id="strongInput" onclick="openListFieldModal(this)">
-          </div>
-          <!-- Weak -->
-          <div class="form-group">
-            <label for="weakInput">Weak</label>
-            <input type="text" class="form-control" id="weakInput" onclick="openListFieldModal(this)">
-          </div>
-          <!-- Target Extra Prop -->
-          <div class="form-group">
-            <label for="targetExtraPropInput">Target Extra Prop</label>
-            <input type="text" class="form-control" id="targetExtraPropInput" onclick="openTwoFieldModal(this)">
-          </div>
-          <!-- Extra Prop -->
-          <div class="form-group">
-            <label for="extraPropInput">Extra Prop</label>
-            <input type="text" class="form-control" id="extraPropInput" onclick="openTwoFieldModal(this)">
-          </div>
-          <!-- Target Related Extra Prop -->
-          <div class="form-group">
-            <label for="targetRelatedExtraPropInput">Target Related Extra Prop</label>
-            <input type="text" class="form-control" id="targetRelatedExtraPropInput" onclick="openTwoFieldModal(this)">
-          </div>
-          <!-- Related Extra Prop -->
-          <div class="form-group">
-            <label for="relatedExtraPropInput">Related Extra Prop</label>
-            <input type="text" class="form-control" id="relatedExtraPropInput" onclick="openTwoFieldModal(this)">
+        <div class="modal-body">
+          <div class="form-group" id="stringFieldGroup">
+            <input type="text" class="form-control" id="stringFieldValue">
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" onclick="saveNewRecord()">Add</button>
-        <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <div class="modal-footer">
+          <button class="btn btn-success" onclick="saveStringField()">Done</button>
+          <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
+  <!-- List Field Modal -->
+  <div class="modal fade" id="listFieldModal" tabindex="-1" role="dialog" aria-labelledby="listFieldModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content list-modal">
+        <div class="modal-header">
+          <h5 class="modal-title" id="listFieldModalLabel">List Items</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" id="listFieldGroup">
+            <div id="listItems">
+              <!-- Populated dynamically with list items -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="error-message" id="listFieldErrorMessage"></div> <!-- Add this line for the error message -->
+          <button class="btn btn-primary" id="addButton" onclick="addItem('listItems')">Add</button>
+          <button class="btn btn-success" onclick="saveListField()">Done</button>
+          <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- New List Field Modal -->
+  <div class="modal fade" id="newListFieldModal" tabindex="-1" role="dialog" aria-labelledby="listFieldModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content list-modal">
+        <div class="modal-header">
+          <h5 class="modal-title" id="newListFieldModalLabel">List Items</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" id="newListFieldGroup">
+            <div id="newListItems">
+              <!-- Populated dynamically with list items -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="error-message" id="newListFieldErrorMessage"></div>
+          <button class="btn btn-primary" id="newAddButton" onclick="addItem('newListItems')">Add</button>
+          <button class="btn btn-success" id="newListFieldDoneButton" onclick="newSaveListField()">Done</button>
+          <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-        <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
-        <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+  <div class="modal fade" id="twoFieldModal" tabindex="-1" role="dialog" aria-labelledby="twoFieldModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content list-modal">
+        <div class="modal-header">
+          <h5 class="modal-title" id="targetColumnHeader" style="width: 48%;"></h5>
+          <h5 class="modal-title" id="valueColumnHeader"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- Container for inputs -->
+          <div id="twoFieldsContainer">
+            <div class="form-group">
+              <input type="text" class="form-control" id="targetColumnInput">
+            </div>
+            <div class="form-group">
+              <input type="text" class="form-control" id="valueColumnInput">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="error-message" id="twoFieldErrorMessage"></div> <!-- Add this line for the error message -->
+          <button class="btn btn-primary" onclick="addTwoFields('twoFieldsContainer')">Add</button>
+          <button class="btn btn-success" onclick="newSaveTwoFields()">Done</button>
+          <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        <script>
-  // ... Existing code
+  <div class="modal fade" id="newTwoFieldModal" tabindex="-1" role="dialog" aria-labelledby="twoFieldModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content list-modal">
+        <div class="modal-header">
+          <h5 class="modal-title" id="newTargetColumnHeader" style="width: 48%;"></h5>
+          <h5 class="modal-title" id="newValueColumnHeader"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- Container for inputs -->
+          <div id="newTwoFieldsContainer">
+            <div class="form-group">
+              <input type="text" class="form-control" id="newTargetColumnInput">
+            </div>
+            <div class="form-group">
+              <input type="text" class="form-control" id="newValueColumnInput">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="error-message" id="newTwoFieldErrorMessage"></div> <!-- Add this line for the error message -->
+          <button class="btn btn-primary" onclick="addTwoFields('newTwoFieldsContainer')">Add</button>
+          <button class="btn btn-success" onclick="newSaveTwoFields()">Done</button>
+          <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  // Function to open ListFieldModal
-  function openListFieldModal(input) {
-    const field = input.id;
-    $('#listFieldModalLabel').text(field);
-    $('#listFieldModal').modal('show');
-  }
 
-  // Function to open TwoFieldModal
-  function openTwoFieldModal(input) {
-    const field1 = input.id;
-    const field2 = field1.replace("target_", "").replace("related_", "");
-    const field1Data = input.value;
-    const field2Data = document.getElementById(field2).value;
-    $('#twoFieldModalLabel').text(`${field1} and ${field2}`);
-    populateTwoFieldsModal('twoFieldsContainer', field1Data, field2Data);
-    $('#twoFieldModal').modal('show');
-  }
-
-  // Function to save new record
-  function saveNewRecord() {
-    console.log(`Calling saveNewRecord function`);
-    const data = {
-      product: document.getElementById('productInput').value.trim(),
-      type: document.getElementById('typeInput').value.trim(),
-      target_observable_type: document.getElementById('targetObservableTypeInput').value.trim(),
-      name: document.getElementById('nameInput').value.trim(),
-      strong: `[${parseListItems(document.getElementById('strongInput').value.trim()).join(', ')}]`,
-      weak: `[${parseListItems(document.getElementById('weakInput').value.trim()).join(', ')}]`,
-      target_extra_prop: `[${parseListItems(document.getElementById('targetExtraPropInput').value.trim()).join(', ')}]`,
-      extra_prop: `[${parseListItems(document.getElementById('extraPropInput').value.trim()).join(', ')}]`,
-      target_related_extra_prop: `[${parseListItems(document.getElementById('targetRelatedExtraPropInput').value.trim()).join(', ')}]`,
-      related_extra_prop: `[${parseListItems(document.getElementById('relatedExtraPropInput').value.trim()).join(', ')}]`,
-    };
-
-    // Call the endpoint to save the new record
-    const url = '/editor/save_new_record/';
-    fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken'),
-      },
-      body: JSON.stringify(data),
-    }).then(response => response.json()).then(data => {
-      console.log('Save New Record API response:', data);
-      // Optionally, update the data table with the new record without having to refresh the page
-      $('#dataTable').DataTable().row.add([
-        data.product,
-        data.type,
-        data.target_observable_type,
-        data.name,
-        data.strong,
-        data.weak,
-        data.target_extra_prop,
-        data.extra_prop,
-        data.target_related_extra_prop,
-        data.related_extra_prop,
-      ]).draw(false);
-      $('#addRecordModal').modal('hide');
-    }).catch(error => {
-      console.error('Error saving new record:', error);
-    });
-  }
-  function handleModalOpen() {
-    const body = document.getElementsByTagName('body')[0];
-    body.style.overflow = 'hidden'; // Prevent scrolling on the main page
-  }
-
-  // Function to handle modal closing
-  function handleModalClose() {
-    const body = document.getElementsByTagName('body')[0];
-    body.style.overflow = 'auto'; // Restore scrolling on the main page
-  }
-
-  // Add event listeners to modals
-  $('#listFieldModal').on('show.bs.modal', handleModalOpen);
-  $('#listFieldModal').on('hidden.bs.modal', handleModalClose);
-  $('#twoFieldModal').on('show.bs.modal', handleModalOpen);
-  $('#twoFieldModal').on('hidden.bs.modal', handleModalClose);
-  $('#addRecordModal').on('show.bs.modal', handleModalOpen);
-  $('#addRecordModal').on('hidden.bs.modal', handleModalClose);
-</script>
-        <script>
-            let targetField;
-            let listItems = [];
-            let targetCellId;
-            let nextTargetCellId;
-            const columnHeaders = {
-              0: "Product",
-              1: "Type",
-              2: "Target Observable Type",
-              3: "Name",
-              4: "Strong",
-              5: "Weak",
-              6: "Target Extra Prop",
-              7: "Extra Prop",
-              8: "Target Related Extra Prop",
-              9: "Related Extra Prop",
-            };
-
-            function editCell(cell, field, id) {
-                console.log(`Calling editCell function with cell:`, cell, `field:`, field, `and id:`, id);
-                targetField = field;
-                targetCellId = `row-${id}-${field}`;
-                const oldValue = cell.innerText;
-                listItems = [];
-
-                // Parse list items for list fields only
-                if (targetField === 'strong' || targetField === 'weak') {
-                    console.log(`Parsing list items for field:`, targetField, `with oldValue:`, oldValue);
-                    listItems = parseListItems(oldValue);
-                }
-
-                populateList('listItems', listItems, targetField, oldValue);
-
-                // Get the corresponding column name for the label
-                let columnName = getColumnName(cell.cellIndex);
-                console.log(`Column header for cellIndex ${cell.cellIndex}:`, columnName);
-
-                if (targetField === 'strong' || targetField === 'weak') {
-                    $('#listFieldModalLabel').text(columnName);
-                    $('#listFieldModal').modal('show');
-                } else {
-                    $('#stringFieldModalLabel').text(columnName);
-                    $('#stringFieldValue').val(oldValue);
-                    $('#stringFieldModal').modal('show');
-                }
-            }
-
-            function getColumnName(cellIndex) {
-              return columnHeaders[cellIndex] || ""; // Return the header text from the mapping or an empty string if not found
-            }
-
-            function parseListItems(value) {
-                console.log(`Calling parseListItems function with value:`, value);
-                // Remove leading and trailing brackets [ ]
-                value = value.trim().slice(1, -1);
-
-                // Split by comma and remove leading and trailing spaces and quotes
-                const items = value.split(',').map(item=>item.trim().replace(/^['"]|['"]$/g, ''));
-
-                return items;
-            }
-
-            function joinListItems(items) {
-                console.log(`Calling joinListItems function with items:`, items);
-                // Join items with comma and space
-                const value = items.join("', '");
-
-                // Add leading and trailing brackets [ ]
-                return `['${value}']`;
-            }
-
-            function populateList(containerId, items, field, value) {
-                const container = document.getElementById(containerId);
-                container.innerHTML = '';
-
-                // If field is of string type, display a single input without "Add" button
-                if (field === 'product' || field === 'type' || field === 'name' || field === 'target_observable_type') {
-                    const listItem = document.createElement('div');
-                    listItem.className = 'form-group';
-                    listItem.innerHTML = `
-                        <input type="text" class="form-control" value="${value}">
-                    `;
-                    container.appendChild(listItem);
-                } else {
-                    // For list types, display inputs with "Add" button
-                    for (let i = 0; i < items.length; i++) {
-                        const listItem = document.createElement('div');
-                        listItem.className = 'form-group';
-                        if (targetField === 'strong' || targetField === 'weak') {
-                            listItem.innerHTML = `
-                                <div class="input-group">
-                                    <input type="text" class="form-control" value="${items[i]}">
-                                    <div class="input-group-append">
-                                        <button class="btn btn-danger btn-sm" onclick="removeItem(this)"><i class="fas fa-minus"></i></button>
-                                    </div>
-                                </div>
-                            `;
-                        } else {
-                            listItem.innerHTML = `
-                                <input type="text" class="form-control" value="${items[i]}">
-                            `;
-                        }
-                        container.appendChild(listItem);
-                    }
-                    // Show the "Add" button only for list types
-                    const addButton = document.getElementById('addButton');
-                    addButton.style.display = (targetField === 'strong' || targetField === 'weak') ? 'block' : 'none';
-                }
-            }
-
-            function addItem(containerId) {
-                console.log(`Calling addItem function with containerId:`, containerId);
-                const container = document.getElementById(containerId);
-                const listItem = document.createElement('div');
-                listItem.className = 'form-group';
-                listItem.innerHTML = `
-                    <div class="input-group">
-                        <input type="text" class="form-control" value="">
-                        <div class="input-group-append">
-                            <button class="btn btn-danger btn-sm" onclick="removeItem(this)"><i class="fas fa-minus"></i></button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(listItem);
-            }
-
-            function removeItem(button) {
-                console.log(`Calling removeItem function`);
-                const listItem = button.parentNode.parentNode;
-                listItem.parentNode.removeChild(listItem);
-            }
-
-            function removeItems(containerId) {
-                console.log(`Calling removeItems function with containerId:`, containerId);
-                const container = document.getElementById(containerId);
-                const items = container.getElementsByClassName('list-item');
-                removeListItems(items);
-            }
-
-            function removeListItems(items) {
-                console.log(`Calling removeListItems function`);
-                for (let i = items.length - 1; i >= 0; i--) {
-                    items[i].parentNode.removeChild(items[i]);
-                }
-            }
-
-            function saveStringField() {
-                console.log(`Calling saveStringField function`);
-                const cell = document.getElementById(targetCellId);
-                // Use the stored cell ID
-                const newValue = document.getElementById('stringFieldValue').value;
-                cell.innerText = newValue;
-                $('#stringFieldModal').modal('hide');
-
-                // Call the endpoint to update the column
-                const url = '/editor/update_column/';
-                const data = {
-                    id: parseInt(targetCellId.split('-')[1]),
-                    // Extract the record ID from the cell ID (e.g., 1 from row-1-product)
-                    field: targetCellId.split('-')[2],
-                    // Extract the field name from the cell ID (e.g., product from row-1-product)
-                    newValue: newValue,
-                };
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken'),
-                        // Don't forget to add the CSRF token
-                    },
-                    body: JSON.stringify(data),
-                }).then(response=>response.json()).then(data=>{
-                    console.log('Update Column API response:', data);
-                }
-                ).catch(error=>{
-                    console.error('Error updating column:', error);
-                }
-                );
-            }
-
-            function getCookie(name) {
-                const value = document.cookie;
-                console.log('Cookie:', value);
-                const parts = value.split(`; ${name}=`);
-                if (parts.length === 2)
-                    return parts.pop().split(';').shift();
-            }
-
-            function saveListField() {
-                console.log(`Calling saveListField function`);
-                const cell = document.getElementById(targetCellId);
-                // Use the stored cell ID
-                const container = document.getElementById('listItems');
-                const items = container.getElementsByClassName('form-control');
-                const values = [];
-                for (let i = 0; i < items.length; i++) {
-                    const value = items[i].value.trim();
-                    // Trim the value to remove leading and trailing spaces
-                    if (value !== '') {
-                        // Only add non-empty values to the array
-                        values.push(value);
-                    }
-                }
-                const invalidValues = [];
-                for (const item of values) {
-                    if (!validateRegex(item)) {
-                        invalidValues.push(item);
-                    }
-                }
-
-                let errorMessageElement = document.getElementById('listFieldErrorMessage');
-                if (invalidValues.length > 0) {
-                    const errorMessage = `Invalid regex pattern found in List Field: ${invalidValues.join(', ')}`;
-                    errorMessageElement.textContent = errorMessage;
-                    errorMessageElement.style.display = 'block';
-                    return;
-                } else {
-                    errorMessageElement.textContent = '';
-                    errorMessageElement.style.display = 'none';
-                }
-                let dup_values = [];
-                let check_values = [];
-                let isDuplicate = false;
-
-                for (let i = 0; i < items.length; i++) {
-                    const value = items[i].value.trim();
-                    // Trim the value to remove leading and trailing spaces
-                    if (value !== '') {
-                        if (check_values.includes(value)) {
-                            isDuplicate = true;
-                            dup_values.push(value)
-                        } else {
-                            check_values.push(value);
-                        }
-                    }
-                }
-
-                if (isDuplicate) {
-                    errorMessageElement.textContent = `Duplicate values are not allowed: ${dup_values.join(', ')}`;
-                    errorMessageElement.style.display = 'block';
-                    return; // Abort saving process if duplicates are found
-                } else {
-                    errorMessageElement.textContent = '';
-                    errorMessageElement.style.display = 'none';
-                }
-
-                const newValue = joinListItems(values);
-                cell.innerText = newValue;
-                $('#listFieldModal').modal('hide');
-
-                // Call the endpoint to update the column
-                const url = '/editor/update_column/';
-                const data = {
-                    id: parseInt(targetCellId.split('-')[1]),
-                    // Extract the record ID from the cell ID (e.g., 1 from row-1-product)
-                    field: targetCellId.split('-')[2],
-                    // Extract the field name from the cell ID (e.g., product from row-1-product)
-                    newValue: newValue,
-                };
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken'),
-                        // Don't forget to add the CSRF token
-                    },
-                    body: JSON.stringify(data),
-                }).then(response=>response.json()).then(data=>{
-                    console.log('Update Column API response:', data);
-                }
-                ).catch(error=>{
-                    console.error('Error updating column:', error);
-                }
-                );
-            }
-
-            $(document).ready(function() {
-                // Initialize DataTables
-                const dataTable = $('#dataTable').DataTable({
-                    // Define the columns and their initial sorting order (e.g., ascending or descending)
-                    columnDefs: [{
-                        targets: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-                        orderable: true
-                    }, {
-                        targets: '_all',
-                        orderable: false
-                    }// Disable sorting for the last column (id)
-                    ],
-                    // Enable filtering
-                    searching: true,
-                    initComplete: function() {
-                        // Add filtering options for Product and Type columns
-                        this.api().columns([0, 1]).every(function() {
-                            const column = this;
-                            const select = $('<select><option value=""></option></select>').appendTo($(column.header())).on('click', function(e) {
-                                e.stopPropagation();
-                                // Prevent DataTables' default sorting behavior
-                            }).on('change', function() {
-                                const val = $.fn.dataTable.util.escapeRegex($(this).val());
-
-                                column.search(val ? '^' + val + '$' : '', true, false).draw();
-                            });
-
-                            column.data().unique().sort().each(function(d, j) {
-                                select.append('<option value="' + d + '">' + d + '</option>');
-                            });
-                        });
-                    },
-                });
-
-                // Dark mode switch toggle
-                const darkModeSwitch = document.getElementById('darkModeSwitch');
-                darkModeSwitch.addEventListener('change', ()=>{
-                    document.body.classList.toggle('dark-mode', darkModeSwitch.checked);
-
-                    // Apply dark mode class to modals
-                    const modals = document.querySelectorAll('.modal-content');
-                    for (const modal of modals) {
-                        modal.classList.toggle('dark-mode', darkModeSwitch.checked);
-                    }
-                }
-                );
-            });
-        </script>
-        <script>
-            // Function for "target_extra_prop" and "extra_prop" group
-            function editTwoFields(cell, id) {
-                console.log(`Calling editTwoFields function with cell:`, cell, `and id:`, id);
-                targetCellId = `row-${id}-target_extra_prop`;
-                nextTargetCellId = `row-${id}-extra_prop`;
-                const targetExtraProp = cell.dataset.targetExtraProp;
-                const extraProp = cell.dataset.extraProp;
-
-                // Get the corresponding column name for the label of target_extra_prop
-                let targetColumnName = getColumnName(cell.cellIndex);
-                let valueColumnName;
-
-                // Handle the case when clicking on "target_extra_prop" field
-                if (targetColumnName === "Target Extra Prop") {
-                    valueColumnName = getColumnName(cell.cellIndex + 1);
-                }// Handle the case when clicking on "extra_prop" field
-                else if (targetColumnName === "Extra Prop") {
-                    valueColumnName = targetColumnName
-                    targetColumnName = getColumnName(cell.cellIndex - 1);
-                }
-
-                // Populate the "twoFieldModal" with the data for target_extra_prop and extra_prop
-                populateTwoFieldsModal('twoFieldsContainer', targetExtraProp, extraProp);
-
-                $('#twoFieldModal').modal('show');
-                // Set the column names on top of the two text input columns
-                document.getElementById('targetColumnHeader').textContent = targetColumnName;
-                document.getElementById('valueColumnHeader').textContent = valueColumnName;
-            }
-
-            // Function for "related_extra_prop" and "target_related_extra_prop" group
-            function editTwoRelatedFields(cell, id) {
-                console.log(`Calling editTwoRelatedFields function with cell:`, cell, `and id:`, id);
-                targetCellId = `row-${id}-target_related_extra_prop`;
-                nextTargetCellId = `row-${id}-related_extra_prop`;
-                const targetRelatedExtraProp = cell.dataset.targetRelatedExtraProp;
-                const relatedExtraProp = cell.dataset.relatedExtraProp;
-
-                // Get the corresponding column name for the label of target_related_extra_prop
-                let targetRelatedColumnName = getColumnName(cell.cellIndex);
-                let relatedValueColumnName;
-
-                // Handle the case when clicking on "target_related_extra_prop" field
-                if (targetRelatedColumnName === "Target Related Extra Prop") {
-                    relatedValueColumnName = getColumnName(cell.cellIndex + 1);
-                }// Handle the case when clicking on "related_extra_prop" field
-                else if (targetRelatedColumnName === "Related Extra Prop") {
-                    relatedValueColumnName = targetRelatedColumnName
-                    targetRelatedColumnName = getColumnName(cell.cellIndex - 1);
-                }
-
-                // Populate the "twoFieldModal" with the data for target_related_extra_prop and related_extra_prop
-                populateTwoFieldsModal('twoFieldsContainer', targetRelatedExtraProp, relatedExtraProp);
-
-                $('#twoFieldModal').modal('show');
-
-                // Set the column names on top of the two text input columns
-                document.getElementById('targetColumnHeader').textContent = targetRelatedColumnName;
-                document.getElementById('valueColumnHeader').textContent = relatedValueColumnName;
-            }
-
-            function populateTwoFieldsModal(containerId, targetValue, value) {
-                const container = document.getElementById(containerId);
-
-                container.innerHTML = '';
-                // Clear the container first before populating new elements
-
-                const targetItems = parseListItems(targetValue);
-                const items = parseListItems(value);
-
-                for (let i = 0; i < Math.max(targetItems.length, items.length); i++) {
-                    const listItem = document.createElement('div');
-                    listItem.className = 'form-group';
-
-                    const targetItemValue = targetItems[i] || '';
-                    const itemValue = items[i] || '';
-
-                    listItem.innerHTML = `
-                <div class="input-group">
-                    <input type="text" class="form-control" value="${targetItemValue}">
-                    <input type="text" class="form-control" value="${itemValue}">
-                    <div class="input-group-append">
-                        <button class="btn btn-danger btn-sm" onclick="removeTwoFields(this)"><i class="fas fa-minus"></i></button>
-                    </div>
+  <!-- Add New Record Modal -->
+  <div class="modal fade" id="addRecordModal" tabindex="-1" role="dialog" aria-labelledby="addRecordModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addRecordModalLabel">Add New Record</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- Container for inputs -->
+          <div id="addRecordContainer">
+            <div class="row">
+              <!-- First Column -->
+              <div class="col-md-6">
+                <!-- Product -->
+                <div class="form-group">
+                  <label for="productInput">Product</label>
+                  <input type="text" class="form-control" id="productInput">
                 </div>
-            `;
-
-                    container.appendChild(listItem);
-                }
-            }
-
-            function addTwoFields() {
-                const container = document.getElementById('twoFieldsContainer');
-                const listItem = document.createElement('div');
-                listItem.className = 'form-group';
-                listItem.innerHTML = `
-                <div class="input-group">
-                    <input type="text" class="form-control" value="">
-                    <input type="text" class="form-control" value="">
-                    <div class="input-group-append">
-                        <button class="btn btn-danger btn-sm" onclick="removeTwoFields(this)"><i class="fas fa-minus"></i></button>
-                    </div>
+                <!-- Target Observable Type -->
+                <div class="form-group">
+                  <label for="targetObservableTypeInput">Target Observable Type</label>
+                  <input type="text" class="form-control" id="targetObservableTypeInput">
                 </div>
-            `;
-                container.appendChild(listItem);
-            }
+                <!-- Strong -->
+                <div class="form-group">
+                  <label for="strongInput">Strong</label>
+                  <input type="text" class="form-control" id="strongInput" onclick="openListFieldModal(this, 'Strong')" readonly>
+                </div>
+                <!-- Target Extra Prop -->
+                <div class="form-group">
+                  <label for="targetExtraPropInput">Target Extra Prop</label>
+                  <input type="text" class="form-control" id="targetExtraPropInput" onclick="openTwoFieldModal(this, 'Target Extra Prop', 'Extra Prop')" readonly>
+                </div>
+                <!-- Ta rget Related Extra Prop -->
+                <div class="form-group">
+                  <label for="targetRelatedExtraPropInput">Target Related Extra Prop</label>
+                  <input type="text" class="form-control" id="targetRelatedExtraPropInput" onclick="openTwoFieldModal(this, 'Target Related Extra Prop', 'Related Extra Prop')" readonly>
+                </div>
+              </div>
+              <!-- Second Column -->
+              <div class="col-md-6">
+                <!-- Type -->
+                <div class="form-group">
+                  <label for="typeInput">Type</label>
+                  <input type="text" class="form-control" id="typeInput">
+                </div>
+                <!-- Name -->
+                <div class="form-group">
+                  <label for="nameInput">Name</label>
+                  <input type="text" class="form-control" id="nameInput">
+                </div>
+                <!-- Weak -->
+                <div class="form-group">
+                  <label for="weakInput">Weak</label>
+                  <input type="text" class="form-control" id="weakInput" onclick="openListFieldModal(this, 'Weak')" readonly>
+                </div>
+                <!-- Extra Prop -->
+                <div class="form-group">
+                  <label for="extraPropInput">Extra Prop</label>
+                  <input type="text" class="form-control" id="extraPropInput" onclick="openTwoFieldModal(this, 'Target Extra Prop', 'Extra Prop')" readonly>
+                </div>
+                <!-- Related Extra Prop -->
+                <div class="form-group">
+                  <label for="relatedExtraPropInput">Related Extra Prop</label>
+                  <input type="text" class="form-control" id="relatedExtraPropInput" onclick="openTwoFieldModal(this, 'Target Related Extra Prop', 'Related Extra Prop')" readonly>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="saveNewRecord()">Add</button>
+          <button type="button" class="btn btn-danger" onclick="clearAddRecordInputs()">Clear</button>
+          <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-
-            function removeTwoFields(button) {
-                const listItem = button.closest('.form-group');
-                listItem.remove();
-            }
-            // Function for saving both groups
-            async function saveTwoFields() {
-                console.log(`Calling saveTwoFields function`);
-                const cell = document.getElementById(targetCellId);
-                const nextCell = document.getElementById(nextTargetCellId);
-                // Use the stored cell ID
-                const container = document.getElementById('twoFieldsContainer');
-                const items = container.getElementsByClassName('input-group');
-                const errorMessageElement = document.getElementById('twoFieldErrorMessage');
-                const values = [];
-                let targetValue = [];
-                let extraValue = [];
-                let textbox = [];
-                let value = ''
-                let allEmpty = true;
-                let allHaveValue = true;
-                for (let i = 0; i < items.length; i++) {
-                    textbox = items[i].getElementsByClassName('form-control');
-                    value = textbox[0].value.trim();
-                    if (value !== '') {
-                        targetValue.push(value);
-                        allEmpty = false;
-                    }
-                    else {
-                        allHaveValue = false;
-                    }
-                    value = textbox[1].value.trim();
-                    if (value !== '') {
-                        extraValue.push(value);
-                    }
-                    if (value === '') {
-                        errorMessageElement.textContent = `Empty fields are not allowed in the 2nd column`;
-                        errorMessageElement.style.display = 'block';
-                        return;
-                    }
-                }
-                if (!allEmpty && !allHaveValue) {
-                    errorMessageElement.textContent = `Target fields either should all be empty or have a value`;
-                    errorMessageElement.style.display = 'block';
-                    return;
-                }
-                const invalidExtraValues = [];
-                for (const item of extraValue) {
-                    if (!validateRegex(item)) {
-                        invalidExtraValues.push(item);
-                    }
-                }
-                if (invalidExtraValues.length > 0) {
-                    const errorMessage = `Invalid regex pattern found in Extra Prop: ${invalidExtraValues.join(', ')}`;
-                    errorMessageElement.textContent = errorMessage;
-                    errorMessageElement.style.display = 'block';
-                    return
-                } else {
-                    errorMessageElement.textContent = '';
-                    errorMessageElement.style.display = 'none';
-                }
-
-                const isRelatedField = targetCellId.includes("related");
-                const newTargetValue = joinListItems(targetValue);
-                if (isRelatedField) {
-                    cell.dataset.targetRelatedExtraProp = newTargetValue; // Set data-target-related-extra-prop for related fields
-                    nextCell.dataset.targetRelatedExtraProp = newTargetValue;
-                } else {
-                    cell.dataset.targetExtraProp = newTargetValue; // Set data-target-extra-prop for non-related fields
-                    nextCell.dataset.targetExtraProp = newTargetValue; // Set data-target-extra-prop for non-related fields
-                }
-                cell.innerText = newTargetValue;
-                const newExtraValue = joinListItems(extraValue);
-                if (isRelatedField) {
-                    cell.dataset.relatedExtraProp = newExtraValue; // Set data-related-extra-prop for related fields
-                    nextCell.dataset.relatedExtraProp = newExtraValue; // Set data-related-extra-prop for related fields
-                } else {
-                    cell.dataset.extraProp = newExtraValue; // Set data-extra-prop for non-related fields
-                    nextCell.dataset.extraProp = newExtraValue; // Set data-extra-prop for non-related fields
-                }
-                nextCell.innerText = newExtraValue;
-                $('#twoFieldModal').modal('hide');
-
-                // Call the endpoint to update the column
-                const url = '/editor/update_column/';
-
-                try {
-                    const target_data = {
-                        id: parseInt(targetCellId.split('-')[1]),
-                        field: targetCellId.split('-')[2],
-                        newValue: newTargetValue,
-                    };
-                    await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken'),
-                        },
-                        body: JSON.stringify(target_data),
-                    });
-                    console.log('Update Column API response:', target_data);
-                } catch (error) {
-                    console.error('Error updating column:', error);
-                }
-
-                try {
-                    const extra_data = {
-                        id: parseInt(nextTargetCellId.split('-')[1]),
-                        field: nextTargetCellId.split('-')[2],
-                        newValue: newExtraValue,
-                    };
-                    await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken'),
-                        },
-                        body: JSON.stringify(extra_data),
-                    });
-                    console.log('Update Column API response:', extra_data);
-                } catch (error) {
-                    console.error('Error updating column:', error);
-                }
-            }
-
-            function validateRegex(pattern) {
-                try {
-                    new RegExp(pattern);
-                    return true;
-                } catch (error) {
-                    return false;
-                }
-            }
-        </script>
-    </body>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+  <script src="{% static 'editor/js/table_display.js' %}"></script>
+</body>
 </html>

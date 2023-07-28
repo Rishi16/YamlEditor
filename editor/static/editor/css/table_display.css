@@ -1,0 +1,173 @@
+  body {
+    background-color: #f8f9fa;
+    padding: 0;
+    margin: 0;
+  }
+
+  .dark-mode-switch {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 3000;
+  }
+
+  .dark-mode-switch input[type="checkbox"] {
+    display: none;
+  }
+
+  .dark-mode-switch label {
+    display: block;
+    cursor: pointer;
+    width: 40px;
+    height: 20px;
+    border-radius: 20px;
+    background-color: #ccc;
+    position: relative;
+  }
+
+  .dark-mode-switch label:after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #fff;
+    transition: transform 0.3s ease;
+  }
+
+  .dark-mode-switch input[type="checkbox"]:checked+label {
+    background-color: #3e3e3e;
+  }
+
+  .dark-mode-switch input[type="checkbox"]:checked+label:after {
+    transform: translateX(20px);
+  }
+
+  /* Light mode colors */
+  :root {
+    --bg-color: #f8f9fa;
+    --text-color: #000;
+    --table-bg-color: #fff;
+    --table-text-color: #000;
+  }
+
+  /* Dark mode colors */
+  body.dark-mode {
+    --bg-color: #1a1a1a;
+    --text-color: #fff;
+    --table-bg-color: #2c2c2c;
+    --table-text-color: #fff;
+  }
+
+  .container-fluid {
+    background-color: var(--bg-color);
+    /* Use CSS variable for background color */
+    color: var(--text-color);
+    /* Use CSS variable for text color */
+    padding: 40px;
+    border-radius: 4px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    height: 100vh;
+    overflow-x: auto;
+  }
+
+  /* Additional styles for dark mode */
+  body.dark-mode .container-fluid {
+    background-color: var(--table-bg-color);
+    /* Use CSS variable for dark mode background color */
+    color: var(--table-text-color);
+    /* Use CSS variable for dark mode text color */
+  }
+
+  h1 {
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .table {
+    margin-bottom: 20px;
+    color: var(--table-text-color);
+  }
+
+  th {
+    font-weight: bold;
+  }
+
+  .list-modal {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    /* Set the maximum width for the popup box */
+    margin: 0 auto;
+    /* Center the popup box horizontally */
+  }
+
+  .list-modal .list-group {
+    margin-bottom: 20px;
+  }
+
+  .list-modal .btn {
+    margin-right: 5px;
+  }
+
+  .list-modal .form-group {
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .list-modal .form-group .form-control {
+    flex-grow: 1;
+    margin-right: 5px;
+  }
+
+  .list-modal .form-group:last-child .btn-danger {
+    margin-top: 0;
+  }
+
+  .list-modal .form-group input {
+    padding: 5px;
+    font-size: inherit;
+  }
+
+  .editable {
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  #twoFieldModal>div {
+    max-width: 800px;
+  }
+
+  .error-message {
+    color: red;
+    position: absolute;
+    bottom: 5px;
+    left: 20px;
+    font-size: 14px;
+  }
+
+  #addRecordModal {
+    z-index: 1050;
+  }
+
+  #twoFieldModal, #newTwoFieldModal, #newListFieldModal, #listFieldModal {
+    z-index: 1100;
+  }
+
+  #addNewRecordButton {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 3000;
+  }
