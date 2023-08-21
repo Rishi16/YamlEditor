@@ -201,7 +201,7 @@ function newSaveTwoFields() {
 // Function to save new record
 function saveNewRecord() {
     console.log(`Calling saveNewRecord function`);
-    const data = {
+    const record = {
         product: document.getElementById('productInput').value.trim(),
         type: document.getElementById('typeInput').value.trim(),
         target_observable_type: document.getElementById('targetObservableTypeInput').value.trim(),
@@ -222,21 +222,23 @@ function saveNewRecord() {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken'),
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(record),
     }).then(response => response.json()).then(data => {
         console.log('Save New Record API response:', data);
+        console.log('Save New Record API response:', record);
+
         // Optionally, update the data table with the new record without having to refresh the page
         $('#dataTable').DataTable().row.add([
-            data.product,
-            data.type,
-            data.target_observable_type,
-            data.name,
-            data.strong,
-            data.weak,
-            data.target_extra_prop,
-            data.extra_prop,
-            data.target_related_extra_prop,
-            data.related_extra_prop,
+            record.product,
+            record.type,
+            record.target_observable_type,
+            record.name,
+            record.strong,
+            record.weak,
+            record.target_extra_prop,
+            record.extra_prop,
+            record.target_related_extra_prop,
+            record.related_extra_prop,
         ]).draw(false);
         $('#addRecordModal').modal('hide');
     }).catch(error => {

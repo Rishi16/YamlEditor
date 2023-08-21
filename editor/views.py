@@ -11,7 +11,6 @@ from django.views.decorators.csrf import csrf_exempt
 @csrf_exempt
 def update_column(request):
     if request.method == 'POST':
-        print(request.POST.__dict__)
         body = json.loads(request.body)
         record_id = body.get('id')
         field = body.get('field')
@@ -125,3 +124,40 @@ def save_config(config_data):
 def table_display(request):
     configs = Config.objects.all()
     return render(request, "table_display.html", {"configs": configs})
+
+@csrf_exempt
+def save_new_record(request):
+    if request.method == 'POST':
+        # Get the data from the POST request
+        body = json.loads(request.body)
+        product = body.get('product')
+        type = body.get('type')
+        name = body.get('name')
+        target_observable_type = body.get('target_observable_type')
+        strong = body.get('strong')
+        weak = body.get('weak')
+        target_extra_prop = body.get('target_extra_prop')
+        extra_prop = body.get('extra_prop')
+        target_related_extra_prop = body.get('target_related_extra_prop')
+        related_extra_prop = body.get('related_extra_prop')
+
+        # Create a new instance of your model
+        new_record = Config(
+            product=product,
+            type=type,
+            name=name,
+            target_observable_type=target_observable_type,
+            strong=strong,
+            weak=weak,
+            target_extra_prop=target_extra_prop,
+            extra_prop=extra_prop,
+            target_related_extra_prop=target_related_extra_prop,
+            related_extra_prop=related_extra_prop
+        )
+
+        # Save the new record
+        new_record.save()
+
+        return JsonResponse({'success': True})  # Return a success response
+
+    return JsonResponse({'success': False})  # Return an error response
