@@ -6,4 +6,5 @@ urlpatterns = [
     path("table/", views.table_display, name="table_display"),
     path('update_column/', views.update_column, name='update_column'),
     path('save_new_record/', views.save_new_record, name='save_new_record'),
+    path('delete_record/', views.delete_record, name='delete_record'),
 ]

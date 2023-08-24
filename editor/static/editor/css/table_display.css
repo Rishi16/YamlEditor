@@ -60,8 +60,59 @@
     --table-bg-color: #2c2c2c;
     --table-text-color: #fff;
   }
+    body.dark-mode input[type="text"],
+    body.dark-mode input[type="text"]:focus,
+    body.dark-mode .dataTables_wrapper select,
+    body.dark-mode .dataTables_filter input[type="search"] {
+      background-color: #2c2c2c;
+      color: #fff;
+      border-color: #4d4d4d;
+    }
 
+    /* Adjust the dropdown arrow color for dark mode */
+    body.dark-mode .dataTables_wrapper .dataTables_length .custom-select::after {
+      color: #fff;
+    }
+
+    /* Adjust the search box icon color for dark mode */
+    body.dark-mode .dataTables_wrapper .dataTables_filter label::after {
+      color: #fff;
+    }
+
+    /* Style the modals and the delete confirmation modal for dark mode */
+    body.dark-mode .modal-content {
+      background-color: var(--table-bg-color) !important;
+      color: var(--table-text-color) !important;
+      border: none !important;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    body.dark-mode .modal-header {
+      background-color: var(--bg-color) !important;
+      color: var(--text-color) !important;
+    }
+
+    body.dark-mode .modal-footer {
+      background-color: var(--bg-color) !important;
+    }
+
+    body.dark-mode .modal-body {
+      background-color: var(--table-bg-color) !important;
+      color: var(--table-text-color) !important;
+    }
+
+    body.dark-mode .modal-dialog {
+      background-color: var(--table-bg-color) !important;
+    }
+
+    body.dark-mode .pagination .page-item .page-link {
+      color: var(--table-text-color) !important;
+    }
+    .pagination .page-item .page-link {
+      color: #000 !important;
+    }
   .container-fluid {
+    padding: 2%;
     background-color: var(--bg-color);
     /* Use CSS variable for background color */
     color: var(--text-color);
@@ -85,6 +136,7 @@
     margin-bottom: 20px;
     font-weight: bold;
     text-align: center;
+    font-size: 2vw;
   }
 
   .table {
@@ -171,3 +223,8 @@
     right: 20px;
     z-index: 3000;
   }
+
+    .button-group {
+      display: flex;
+      gap: 5px;
+    }

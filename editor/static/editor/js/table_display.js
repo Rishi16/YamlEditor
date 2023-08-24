@@ -239,7 +239,18 @@ function saveNewRecord() {
             record.extra_prop,
             record.target_related_extra_prop,
             record.related_extra_prop,
+            ""
         ]).draw(false);
+        const row = document.evaluate('//*[@id="dataTable"]/tbody/tr[not(@id)]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        row.id = `row-${data.record.id}`;
+        xpath = `//*[@id="dataTable"]/tbody/tr[@id="row-${data.record.id}"]/td`
+        const newRow = document.evaluate(xpath, document, null, XPathResult.ANY_TYPE, null);
+        let node;
+        const nodes = [];
+        while (node = newRow.iterateNext()) {
+          nodes.push(node);
+        }
+        setNewRecordAttr(nodes, data.record)
         $('#addRecordModal').modal('hide');
     }).catch(error => {
         console.error('Error saving new record:', error);
@@ -247,7 +258,115 @@ function saveNewRecord() {
     clearAddRecordInputs();
 }
 
+function setNewRecordAttr(nodes, record) {
+    nodes[0].onclick = function() {
+        editCell(this, 'product', record.id);
+    };
+    nodes[0].id = `row-${record.id}-product`;
+    nodes[0].class = 'editable sorting_1'
 
+    nodes[1].onclick = function() {
+        editCell(this, 'type', record.id);
+    };
+    nodes[1].id = `row-${record.id}-type`;
+    nodes[1].class = 'editable'
+
+    nodes[2].onclick = function() {
+        editCell(this, 'target_observable_type', record.id);
+    };
+    nodes[2].id = `row-${record.id}-target_observable_type`;
+    nodes[2].class = 'editable'
+
+    nodes[3].onclick = function() {
+        editCell(this, 'name', record.id);
+    };
+    nodes[3].id = `row-${record.id}-name`;
+    nodes[3].class = 'editable'
+    nodes[4].onclick = function() {
+        editCell(this, 'strong', record.id);
+    };
+    nodes[4].id = `row-${record.id}-strong`;
+    nodes[4].class = 'editable'
+    nodes[5].onclick = function() {
+        editCell(this, 'weak', record.id);
+    };
+    nodes[5].id = `row-${record.id}-weak`;
+    nodes[5].class = 'editable'
+
+    nodes[6].onclick = function() {
+        editTwoFields(this, record.id);
+    };
+    if (record.target_extra_prop.includes(',')) {
+        nodes[6].setAttribute('data-target-extra-prop', record.target_extra_prop.replace("[", "['").replace("]", "']").replace(", ", "','"));
+    } else {
+        nodes[6].setAttribute('data-target-extra-prop', record.target_extra_prop);
+    }
+    if (record.extra_prop.includes(',')) {
+        nodes[6].setAttribute('data-extra-prop', record.extra_prop.replace("[", "['").replace("]", "']").replace(",", "','"));
+    } else {
+        nodes[6].setAttribute('data-extra-prop', record.extra_prop);
+    }
+    nodes[6].id = `row-${record.id}-target_extra_prop`;
+    nodes[6].class = 'editable'
+
+    nodes[7].onclick = function() {
+        editTwoFields(this, record.id);
+    };
+    if (record.target_extra_prop.includes(',')) {
+        nodes[7].setAttribute('data-target-extra-prop', record.target_extra_prop.replace("[", "['").replace("]", "']").replace(", ", "','"));
+    } else {
+        nodes[7].setAttribute('data-target-extra-prop', record.target_extra_prop);
+    }
+    if (record.extra_prop.includes(',')) {
+        nodes[7].setAttribute('data-extra-prop', record.extra_prop.replace("[", "['").replace("]", "']").replace(",", "','"));
+    } else {
+        nodes[7].setAttribute('data-extra-prop', record.extra_prop);
+    }
+    nodes[7].id = `row-${record.id}-extra_prop`;
+    nodes[7].class = 'editable'
+
+    nodes[8].onclick = function() {
+        editTwoRelatedFields(this, record.id);
+    };
+    if (record.target_related_extra_prop.includes(',')) {
+        nodes[8].setAttribute('data-target-related-extra-prop', record.target_related_extra_prop.replace("[", "['").replace("]", "']").replace(", ", "','"));
+    } else {
+        nodes[8].setAttribute('data-target-related-extra-prop', record.target_related_extra_prop);
+    }
+    if (record.related_extra_prop.includes(',')) {
+        nodes[8].setAttribute('data-related-extra-prop', record.related_extra_prop.replace("[", "['").replace("]", "']").replace(",", "','"));
+    } else {
+        nodes[8].setAttribute('data-related-extra-prop', record.related_extra_prop);
+    }
+    nodes[8].id = `row-${record.id}-target_related_extra_prop`;
+    nodes[8].class = 'editable'
+
+    nodes[9].onclick = function() {
+        editTwoRelatedFields(this, record.id);
+    };
+    if (record.target_related_extra_prop.includes(',')) {
+        nodes[9].setAttribute('data-target-related-extra-prop', record.target_related_extra_prop.replace("[", "['").replace("]", "']").replace(", ", "','"));
+    } else {
+        nodes[9].setAttribute('data-target-related-extra-prop', record.target_related_extra_prop);
+    }
+    if (record.related_extra_prop.includes(',')) {
+        nodes[9].setAttribute('data-related-extra-prop', record.related_extra_prop.replace("[", "['").replace("]", "']").replace(",", "','"));
+    } else {
+        nodes[9].setAttribute('data-related-extra-prop', record.related_extra_prop);
+    }
+    nodes[9].id = `row-${record.id}-related_extra_prop`;
+    nodes[9].class = 'editable'
+    nodes[10].innerHTML=`
+            <div class="button-group">
+              <button class="btn btn-danger" onclick="openDeleteConfirmationModal(${record.id})"  title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+              <button class="btn btn-primary" onclick="openDuplicateModal(${record.id})"  title="Duplicate">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+            `;
+}
 function editCell(cell, field, id) {
     console.log(`Calling editCell function with cell:`, cell, `field:`, field, `and id:`, id);
     targetField = field;
@@ -522,7 +641,11 @@ $(document).ready(function() {
             }, {
                 targets: '_all',
                 orderable: false
-            } // Disable sorting for the last column (id)
+            }, {
+                targets: -1, // Target last column
+                orderable: false,
+                searchable: false
+            }
         ],
         // Enable filtering
         searching: true,
@@ -560,8 +683,8 @@ $(document).ready(function() {
 });
 // Function for "target_extra_prop" and "extra_prop" group
 function editTwoFields(cell, id) {
-    targetCellId = "row-${id}-target_extra_prop";
-    nextTargetCellId = "row-${id}-extra_prop";
+    targetCellId = `row-${id}-target_extra_prop`;
+    nextTargetCellId = `row-${id}-extra_prop`;
     const targetExtraProp = cell.dataset.targetExtraProp;
     const extraProp = cell.dataset.extraProp;
 
@@ -589,8 +712,8 @@ function editTwoFields(cell, id) {
 
 // Function for "related_extra_prop" and "target_related_extra_prop" group
 function editTwoRelatedFields(cell, id) {
-    targetCellId = "row-${id}-target_related_extra_prop";
-    nextTargetCellId = "row-${id}-related_extra_prop";
+    targetCellId = `row-${id}-target_related_extra_prop`;
+    nextTargetCellId = `row-${id}-related_extra_prop`;
     const targetRelatedExtraProp = cell.dataset.targetRelatedExtraProp;
     const relatedExtraProp = cell.dataset.relatedExtraProp;
 
@@ -670,6 +793,7 @@ function removeTwoFields(button) {
 }
 // Function for saving both groups
 async function saveTwoFields() {
+    console.log(`Calling saveTwoFields function`);
     console.log(`Calling saveTwoFields function`);
     const cell = document.getElementById(targetCellId);
     const nextCell = document.getElementById(nextTargetCellId);
@@ -794,4 +918,80 @@ function validateRegex(pattern) {
     } catch (error) {
         return false;
     }
+}
+
+function openDeleteConfirmationModal(id) {
+  $('#deleteConfirmationModal').modal('show');
+  // Store the ID of the record to be deleted in a hidden input field
+  $('#deleteRecordId').val(id);
+}
+
+// Function to delete the record
+function deleteRecord(){
+ var recordId = $('#deleteRecordId').val();
+  fetch('/editor/delete_record/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ record_id: recordId }),
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Remove the row from the table
+      const row = document.getElementById(`row-${recordId}`);
+      row.remove();
+      $('#deleteConfirmationModal').modal('hide');
+    } else {
+      alert('Failed to delete the record.');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+}
+
+// Function to open duplicate modal and prefill with record values
+function openDuplicateModal(recordId) {
+  const record = getRecordById(recordId); // Implement this function to retrieve the record by ID
+  if (record) {
+    // Prefill modal fields
+    document.getElementById('productInput').value = record.product;
+    document.getElementById('typeInput').value = record.type;
+    document.getElementById('targetObservableTypeInput').value = record.targetObservableType;
+    document.getElementById('nameInput').value = record.name;
+    document.getElementById('strongInput').value = record.strong;
+    document.getElementById('weakInput').value = record.weak;
+    document.getElementById('targetExtraPropInput').value = record.targetExtraProp;
+    document.getElementById('extraPropInput').value = record.extraProp;
+    document.getElementById('targetRelatedExtraPropInput').value = record.targetRelatedExtraProp;
+    document.getElementById('relatedExtraPropInput').value = record.relatedExtraProp;
+
+    // Open the modal
+    $('#addRecordModal').modal('show');
+  }
+}
+
+function getRecordById(recordId) {
+  const record = {};
+
+  const row = document.getElementById(`row-${recordId}`);
+  if (!row) {
+    console.error(`Row with ID 'row-${recordId}' not found.`);
+    return record;
+  }
+
+  record.product = row.querySelector(`#row-${recordId}-product`).textContent;
+  record.type = row.querySelector(`#row-${recordId}-type`).textContent;
+  record.targetObservableType = row.querySelector(`#row-${recordId}-target_observable_type`).textContent;
+  record.name = row.querySelector(`#row-${recordId}-name`).textContent;
+  record.strong = row.querySelector(`#row-${recordId}-strong`).textContent;
+  record.weak = row.querySelector(`#row-${recordId}-weak`).textContent;
+  record.targetExtraProp = row.querySelector(`#row-${recordId}-target_extra_prop`).textContent;
+  record.extraProp = row.querySelector(`#row-${recordId}-extra_prop`).textContent;
+  record.targetRelatedExtraProp = row.querySelector(`#row-${recordId}-target_related_extra_prop`).textContent;
+  record.relatedExtraProp = row.querySelector(`#row-${recordId}-related_extra_prop`).textContent;
+
+  return record;
 }

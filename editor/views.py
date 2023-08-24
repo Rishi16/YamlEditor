@@ -6,6 +6,7 @@ from .models import Config
 import yaml
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.forms.models import model_to_dict
 
 
 @csrf_exempt
@@ -158,6 +159,19 @@ def save_new_record(request):
         # Save the new record
         new_record.save()
 
-        return JsonResponse({'success': True})  # Return a success response
+        return JsonResponse({'success': True, 'record': model_to_dict(new_record)})  # Return a success response
 
     return JsonResponse({'success': False})  # Return an error response
+
+@csrf_exempt
+def delete_record(request):
+    if request.method == 'POST':
+        record_id = json.loads(request.body).get('record_id')
+        print("Delete ", record_id)
+        try:
+            config = Config.objects.get(pk=record_id)
+            config.delete()
+            return JsonResponse({'success': True})
+        except Config.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Record not found'})
+
